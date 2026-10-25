@@ -2,7 +2,9 @@
 
 An independent native GTK photo editor, written in Vala with GTK 4 and libadwaita. Free software under **GPL-3.0-or-later**.
 
-[Source repository](https://github.com/gstn-caruso/darkroom) · [Releases](https://github.com/gstn-caruso/darkroom/releases) (first publication pending).
+[Source repository](https://github.com/gstn-caruso/darkroom) · [Releases](https://github.com/gstn-caruso/darkroom/releases)
+
+The UI uses native GTK 4 widgets and native libadwaita GNOME components throughout, never Electron, WebViews, or web-based UI. See [AGENTS.md](AGENTS.md) for project constraints.
 
 ## Initial foundation
 
@@ -71,7 +73,7 @@ Installation requires administrator approval and a package built for the host's 
 sudo apt install ../darkroom_0.1.0-1_amd64.deb
 ```
 
-APT resolves the runtime dependencies recorded in the package; do not force installation on an older distribution. Published CI packages will target Ubuntu 24.04 amd64.
+APT resolves the runtime dependencies recorded in the package; do not force installation on an older distribution. Published CI packages target Ubuntu 24.04 amd64.
 
 ## Continuous delivery
 
@@ -79,6 +81,8 @@ APT resolves the runtime dependencies recorded in the package; do not force inst
 
 For this desktop application, **deploy means publishing a GitHub prerelease**, not installing on a server. The workflow is configured to publish to [Releases](https://github.com/gstn-caruso/darkroom/releases) after each successful main push, including a merge, with a unique `snapshot-<run>-<attempt>` tag targeting the exact tested commit. The Debian version is `0.1.0+ci.<run>.<attempt>-1`; increment the base version when starting a new release series. The release attaches the same immutable workflow artifact, plus `SHA256SUMS`, with no rebuild. No concurrency cancellation is configured, so main pushes are not intentionally dropped. Checks use read-only repository permissions; only the gated release job requests `contents: write`. No personal secret is needed beyond the automatic `GITHUB_TOKEN`.
 
-**The public repository exists and `origin` is configured, but GitHub Actions execution, branch protection, and first publication are still pending.** The owner must verify a real CI run, enable token-based release creation if required by repository policy, and configure branch protection/rulesets requiring `Test and package (Ubuntu 24.04 amd64)` before merges. For bootstrap, manual dispatch can verify the feature branch once that branch is the repository's temporary default; create `main` only after those checks are green. Local verification is not evidence that remote CI or publication works. Organization policies may further restrict release permissions.
+**CI and the first main-push publication have succeeded on Ubuntu 24.04 amd64.** The [bootstrap manual run](https://github.com/gstn-caruso/darkroom/actions/runs/40246332918) passed checks and correctly skipped publication. After `main` was established at that tested commit, the [first main-push run](https://github.com/gstn-caruso/darkroom/actions/runs/40246509296) passed checks and publication, producing [snapshot-2-1](https://github.com/gstn-caruso/darkroom/releases/tag/snapshot-2-1) with `darkroom_0.1.0+ci.2.1-1_amd64.deb` and `SHA256SUMS`.
 
-The Ubuntu 24.04 target is configured but has not been tested locally on that distribution. See [DEVELOPMENT.md](DEVELOPMENT.md) for actual verification evidence and [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow.
+`main` is now the default branch and is protected: pull requests and the up-to-date `Test and package (Ubuntu 24.04 amd64)` check are required, including for administrators; force pushes and deletion are disabled, and conversations must be resolved. Required approving reviews are set to zero for the solo owner. An actual PR merge through this protection and its resulting release remain the next verification step; the successful main-push release does not establish that flow yet.
+
+These remote results were verified by the coordinator; the release package has not been installed or checksummed locally. See [DEVELOPMENT.md](DEVELOPMENT.md) for evidence and remaining limits, and [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow.
