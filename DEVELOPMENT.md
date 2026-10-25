@@ -68,6 +68,8 @@ Generated logs are ignored local artifacts under `build/verification/`; this doc
 
 ## Repository activation
 
+This section records local activation verification before the remote runs below.
+
 The public [source repository](https://github.com/gstn-caruso/darkroom) now exists and is configured as `origin`. The workflow adds checks-only manual dispatch while preserving PR/main checks and the push-to-main-only release gate. The confirmed repository URL is the AppStream homepage; validation no longer overrides the missing-homepage warning. No useful structural tidying was identified, and application behavior and test sources remain unchanged.
 
 Local activation acceptance on the same Ubuntu 26.04.1 toolchain:
@@ -77,9 +79,22 @@ Local activation acceptance on the same Ubuntu 26.04.1 toolchain:
 - `meson compile -C build` and `meson test -C build --print-errorlogs` passed: four entries, zero failures, with the same eight preview and one GUI scenarios. AppStream validation now runs without overrides. Evidence: `build/verification/activation-compile.log` and `activation-tests.log`.
 - `dpkg-buildpackage -us -uc -b` passed, including all four test entries. Inspection and extraction of `../darkroom_0.1.0-1_amd64.deb` succeeded; the extracted desktop entry and AppStream metadata validated without overrides, and the packaged metadata matched the source. Evidence: `build/verification/activation-package.log` and `activation-package-inspection.log`. No package or dependency was installed.
 
+## Remote CI, release, and protection verification
+
+The following evidence was supplied by the coordinator, who observed the runs and GitHub API responses. It was not independently re-executed during this documentation-only update.
+
+- The public [repository](https://github.com/gstn-caruso/darkroom) has `origin` configured and `main` as its default branch. Initial commit `93855ce5357ae672c9d2f5a5d810fe1ffacdf732` was published after independent staged review. `main` was established at that same commit only after bootstrap CI passed.
+- The [bootstrap run 40246332918](https://github.com/gstn-caruso/darkroom/actions/runs/40246332918), triggered by `workflow_dispatch` on the feature branch, succeeded on Ubuntu 24.04 amd64. Build, all four suite entries (eight preview scenarios, one GUI scenario, desktop and AppStream validation), Debian packaging, package/resource inspection, and artifact upload passed. The release job was skipped as intended.
+- The [first main-push run 40246509296](https://github.com/gstn-caruso/darkroom/actions/runs/40246509296) succeeded in both checks and publication, including the artifact download/checksum/publish step. The [snapshot-2-1 prerelease](https://github.com/gstn-caruso/darkroom/releases/tag/snapshot-2-1) targets exactly `93855ce5357ae672c9d2f5a5d810fe1ffacdf732`, confirmed through the tag/commit API. Uploaded assets are `darkroom_0.1.0+ci.2.1-1_amd64.deb` (21,952 bytes) and `SHA256SUMS` (100 bytes). The asset API reports the Debian package digest as `sha256:2dd458b75d6cf159ab65d521a5c11e2ee6d43ea6a97e7326d93c1bf9fad842d4`.
+- Checksumming occurred in the remote release job; asset metadata was inspected through the API. Neither the release package nor the optional bootstrap artifact was downloaded for local verification. The bootstrap artifact download attempt failed with HTTP 503 due to a storage egress limit. There was no local checksum verification or package installation.
+- Branch protection was confirmed through PUT/GET responses: PR required; required check `Test and package (Ubuntu 24.04 amd64)` from GitHub Actions app `15368`; strict/up-to-date checks and administrator enforcement enabled; force pushes and deletion disabled; conversation resolution required. Required approving reviewers are zero for the solo owner, so manual approval is not a mandatory protection rule.
+- Actions are enabled with default workflow permissions set to read. `GITHUB_TOKEN` cannot approve PR reviews; only the release job explicitly requests write permission for publication.
+
+The standing UI constraint is now explicit in [AGENTS.md](AGENTS.md) and [CONTRIBUTING.md](CONTRIBUTING.md): Vala with native GTK 4 widgets and native libadwaita GNOME components throughout, no Electron, WebViews, or web-based UI. Native GTK CSS and image textures are allowed. No UI rewrite or runtime change is part of this documentation update.
+
 ## Remaining limits
 
-- GitHub Actions execution, tag creation, [release upload](https://github.com/gstn-caruso/darkroom/releases), required-check branch protection, and an Ubuntu 24.04 build are still **pending**. Verify real CI and require `Test and package (Ubuntu 24.04 amd64)` before integration. Manual dispatch may bootstrap checks on the temporary default feature branch before creating main; it never publishes, even on main. No actionlint executable is available; YAML/shell checks and independent reading are not a substitute for GitHub execution.
-- The local `.deb` was built on Ubuntu 26.04.1 and is not the configured Ubuntu 24.04 distribution artifact. No installation or desktop-menu integration was tested. The native chooser has not been exercised interactively.
+- A real PR merge through the required checks and branch protection, followed by publication for that merge, remains **pending**. The next acceptance step is to review this documentation change, push it, obtain green CI, and merge it through the protected PR flow. The first main-push release verifies publication, not an actual PR merge. No actionlint executable was available during local activation; the historical YAML/shell checks remain static evidence, distinct from the now-observed GitHub runs.
+- The local `.deb` was built on Ubuntu 26.04.1 and is not the Ubuntu 24.04 distribution artifact now verified on CI. No host installation or desktop-menu integration was tested. The native chooser has not been exercised interactively.
 - Expected non-fatal diagnostics include generated-C unused-variable warnings, a newer-GTK deprecation warning for the compatible GdkPixbuf texture adapter, and Xvfb acceleration warnings. Packaging also warns about the placeholder `darkroom@localhost` maintainer address; replace it with the real project contact when one is selected.
 - Preview-only editing, synchronous decoding, and the feature exclusions described in the README remain intentional limitations.
