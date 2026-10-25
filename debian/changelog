@@ -1,0 +1,5 @@
+darkroom (0.1.0-1) unstable; urgency=medium
+
+  * Initial native GTK photo preview and rotation foundation.
+
+ -- Darkroom contributors <darkroom@localhost>  Sun, 25 Oct 2026 12:00:00 +0000

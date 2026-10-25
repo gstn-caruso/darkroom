@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+<component type="desktop-application">
+  <id>org.darkroom.Darkroom</id>
+  <name>Darkroom</name>
+  <summary>Preview and rotate photos in a native GTK editor</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <developer id="org.darkroom"><name>Darkroom contributors</name></developer>
+  <description>
+    <p>Darkroom is an independent native GTK photo editor built with Vala and libadwaita.</p>
+    <p>This initial version opens local photos, rotates the preview, and resets the preview without changing the original file. Editing is preview-only; export and RAW development are not yet supported.</p>
+  </description>
+  <url type="homepage">https://github.com/gstn-caruso/darkroom</url>
+  <launchable type="desktop-id">org.darkroom.Darkroom.desktop</launchable>
+  <content_rating type="oars-1.1"/>
+  <releases><release version="0.1.0" date="2026-10-25"/></releases>
+</component>

@@ -1,0 +1,81 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+name: Build, test, and release
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Test and package (Ubuntu 24.04 amd64)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install build and test tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y build-essential meson ninja-build valac pkg-config libglib2.0-dev libgtk-4-dev libadwaita-1-dev libgdk-pixbuf-2.0-dev debhelper devscripts dpkg-dev xvfb xauth dbus desktop-file-utils appstream
+      - name: Build and test
+        run: |
+          meson setup build --prefix=/usr
+          meson compile -C build
+          meson test -C build --print-errorlogs
+      - name: Set unique snapshot version and build package
+        env:
+          RUN_NUMBER: ${{ github.run_number }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          version="0.1.0+ci.${RUN_NUMBER}.${RUN_ATTEMPT}-1"
+          DEBFULLNAME='Darkroom CI' DEBEMAIL='darkroom@localhost' dch --newversion "$version" --distribution unstable 'Automated tested snapshot.'
+          dpkg-buildpackage -us -uc -b
+          mkdir -p build/release
+          cp ../darkroom_"${version}"_amd64.deb build/release/
+          cd build/release || exit 1
+          sha256sum -- *.deb > SHA256SUMS
+      - name: Inspect package
+        run: |
+          package=(build/release/*.deb)
+          dpkg-deb --info "${package[0]}"
+          dpkg-deb --contents "${package[0]}"
+          extracted=$(mktemp -d)
+          dpkg-deb --extract "${package[0]}" "$extracted"
+          test -x "$extracted/usr/bin/darkroom"
+          desktop-file-validate "$extracted/usr/share/applications/org.darkroom.Darkroom.desktop"
+          appstreamcli validate --no-net "$extracted/usr/share/metainfo/org.darkroom.Darkroom.metainfo.xml"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tested-debian-package
+          path: build/release/*
+          if-no-files-found: error
+
+  release:
+    name: Publish tested desktop package
+    needs: checks
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: tested-debian-package
+          path: release
+      - name: Verify and publish immutable artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          COMMIT: ${{ github.sha }}
+          RUN_NUMBER: ${{ github.run_number }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          cd release || exit 1
+          sha256sum --check SHA256SUMS
+          tag="snapshot-${RUN_NUMBER}-${RUN_ATTEMPT}"
+          gh release create "$tag" --target "$COMMIT" --title "Darkroom $tag" --notes 'Native GTK photo editor foundation. Preview-only rotation; no export or RAW development. Package targets Ubuntu 24.04 amd64.' --prerelease -- ./*.deb SHA256SUMS

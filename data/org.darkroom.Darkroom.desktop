@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Darkroom
+Comment=Preview and rotate photos without changing originals
+Exec=darkroom
+Icon=org.darkroom.Darkroom
+Terminal=false
+Categories=Graphics;Photography;GTK;
+Keywords=Photo;Image;Preview;Rotate;
+StartupNotify=true

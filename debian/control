@@ -1,0 +1,15 @@
+Source: darkroom
+Section: graphics
+Priority: optional
+Maintainer: Darkroom contributors <darkroom@localhost>
+Build-Depends: debhelper-compat (= 13), meson (>= 1.0), ninja-build, valac (>= 0.56), pkg-config, libglib2.0-dev (>= 2.76), libgtk-4-dev (>= 4.10), libadwaita-1-dev (>= 1.4), libgdk-pixbuf-2.0-dev, xvfb, xauth, dbus, desktop-file-utils, appstream
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+
+Package: darkroom
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: independent native GTK photo editor
+ Darkroom opens local photos and provides non-destructive preview rotation
+ and reset using GTK 4 and libadwaita. This initial version does not export
+ edited files or develop RAW images. Original files are never overwritten.
